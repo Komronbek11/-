@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>♥️♥️♥️</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+        body {
+            text-align: center;
+            background: linear-gradient(to right, #ff758c, #ff7eb3);
+            font-family: 'Pacifico', cursive;
+            font-size: 25px;
+            font-weight: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+        }
+h2{
+    font-weight: none;
+}
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 25px;
+            background: white;
+            color: none;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .button:hover {
+            background: #cc0000;
+            transform: scale(1.1);
+        }
+
+        .heart {
+            position: absolute;
+            color: red;
+            font-size: 24px;
+            animation: float 4s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { transform: translateY(-600px); opacity: 0; }
+        }
+
+        #noButton {
+            position: relative;
+        }
+    #startButton{
+        color: white;
+        background: rgb(255,25,63);
+background: -moz-linear-gradient(130deg, rgba(255,25,63,0.8492753623188406) 33%, rgba(100,21,255,0.7533596757529438) 77%);
+background: -webkit-linear-gradient(130deg, rgba(255,25,63,0.8492753623188406) 33%, rgba(100,21,255,0.7533596757529438) 77%);
+background: linear-gradient(130deg, rgba(255,25,63,0.8492753623188406) 33%, rgba(100,21,255,0.7533596757529438) 77%);
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#ff193f",endColorstr="#6415ff",GradientType=1);
+        </style>
+</head>
+<body>
+
+    <div id="text1">У меня есть секрет...</div>
+    <button class="button" id="startButton">Узнать</button>
+
+    <div id="text2" class="hidden fade-in"></div>
+    <div id="text3" class="hidden fade-in"></div>
+    <div id="text4" class="hidden fade-in"><h3>Но сегодня я скажу...</h3></div>
+    <div id="finalMessage" class="hidden fade-in">
+        <strong>Я люблю тебя ❤️</strong><br><br>
+        Ты меня любишь?
+        <br><br>
+        <button class="button" id="yesButton">Да ❤️</button>
+        <button class="button" id="noButton">Нет 💔</button>
+    </div>
+
+    <div id="resultMessage" class="hidden fade-in"></div>
+
+    <script>
+        const startButton = document.getElementById("startButton");
+        const text1 = document.getElementById("text1");
+        const text2 = document.getElementById("text2");
+        const text3 = document.getElementById("text3");
+        const text4 = document.getElementById("text4");
+        const finalMessage = document.getElementById("finalMessage");
+        const yesButton = document.getElementById("yesButton");
+        const noButton = document.getElementById("noButton");
+        const resultMessage = document.getElementById("resultMessage");
+
+        // Имя девушки
+        let name = "Ясмира"; 
+
+        text1.innerHTML = `У меня есть секрет, ${name}...`;
+        text2.innerHTML = `Когда я увидел тебя в первый раз, ${name}, я понял, что ты особенная...`;
+        text3.innerHTML = `Я долго не знал, как сказать тебе об этом, ${name}...`;
+
+        startButton.addEventListener("click", () => {
+            text1.style.display = "none";
+            startButton.style.display = "none";
+
+            setTimeout(() => { text2.classList.remove("hidden"); createHearts(); }, 1000);
+            setTimeout(() => { text3.classList.remove("hidden"); }, 4000);
+            setTimeout(() => { text4.classList.remove("hidden"); }, 8000);
+            setTimeout(() => { finalMessage.classList.remove("hidden"); }, 10000);
+        });
+
+   
+    yesButton.addEventListener("click", () => {
+        text2.style.display = "none";
+        text3.style.display = "none";
+        text4.style.display = "none";
+        finalMessage.style.display = "none";
+        resultMessage.classList.remove("hidden");
+        resultMessage.innerHTML = `<h2>Ты сделала меня самым счастливым человеком! ❤️</h2>`;
+    });
+
+    noButton.addEventListener("click", () => {
+        text2.style.display = "none";
+        text3.style.display = "none";
+        text4.style.display = "none";
+        finalMessage.style.display = "none";
+        resultMessage.classList.remove("hidden");
+        resultMessage.innerHTML = `<h2>Ой, кажется, кнопка "Нет" сломалась! 😜</h2>`;
+    });
+        function createHearts() {
+            setInterval(() => {
+                const heart = document.createElement("div");
+                heart.innerHTML = "❤️";
+                heart.classList.add("heart");
+                document.body.appendChild(heart);
+                heart.style.left = Math.random() * window.innerWidth + "px";
+                heart.style.top = window.innerHeight + "px";
+
+                setTimeout(() => { heart.remove(); }, 5000);
+            }, 500);
+        }
+    </script>
+
+</body>
+</html>
