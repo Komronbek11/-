@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>❤️ Одно послание для тебя ❤️</title>
+    <link rel="icon" type="image/png" href="https://em-content.zobj.net/source/apple/354/sparkling-heart_1f496.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Marck+Script&display=swap');
+        
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #000; color: #fff;
+            font-family: 'Marck Script', cursive;
+            font-size: calc(1.5vw + 1.5vh);
+        }
+
+        .hidden { display: none !important; }
+
+        #particles-js {
+            position: absolute; width: 100%; height: 100%; z-index: 1;
+        }
+
+        .content-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column; z-index: 2; text-align: center;
+            padding: 20px; box-sizing: border-box;
+        }
+
+        .text-line {
+            opacity: 0; transform: translateY(30px);
+            text-shadow: 0 0 15px rgba(255, 105, 180, 0.7), 0 0 25px rgba(255, 105, 180, 0.5);
+        }
+
+        .button-container {
+            margin-top: 40px; opacity: 0; transform: scale(0.8);
+        }
+
+        .button {
+            padding: 15px 35px; font-size: 0.8em; font-family: 'Marck Script', cursive;
+            cursor: pointer; border: 2px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50px; color: white; background: transparent;
+            backdrop-filter: blur(5px); transition: all 0.4s ease; margin: 0 15px;
+        }
+
+        .button:hover {
+            background: rgba(255, 105, 180, 0.5); border-color: rgba(255, 105, 180, 1);
+            transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 105, 180, 0.7);
+        }
+        
+        #startButton { font-size: 1.2em; }
+        
+        #finalScene {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+        }
+
+        .star {
+            position: absolute; width: 20px; height: 20px;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,223,186,1) 40%, rgba(255,105,180,0) 70%);
+            border-radius: 50%; box-shadow: 0 0 20px #fff, 0 0 30px #ffd700, 0 0 50px #ff69b4;
+            opacity: 0;
+        }
+        #star1 { top: 15%; left: 15%; }
+        #star2 { top: 85%; left: 85%; }
+
+        #finalText {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); z-index: 11;
+            font-size: 1.5em; opacity: 0;
+            text-shadow: 0 0 25px #ff69b4, 0 0 15px #fff;
+        }
+
+        #volume-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            z-index: 999; display: flex; justify-content: center; align-items: center;
+            flex-direction: column; text-align: center;
+            opacity: 0; transition: opacity 1s ease; pointer-events: none;
+        }
+        #volume-modal.visible { opacity: 1; pointer-events: auto; }
+
+        #volume-modal h2 { font-size: 1.2em; margin-bottom: 20px; }
+        #volume-modal p { font-size: 0.8em; margin-bottom: 30px; }
+        #volume-modal .button { font-size: 1em; }
+
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+
+    <div id="volume-modal">
+        <h2>Для полного погружения</h2>
+        <p>Пожалуйста, включите звук или увеличьте громкость.<br>Это очень важно.</p>
+        <button class="button" id="proceedButton">Я готов(а)</button>
+    </div>
+
+    <div class="content-container" id="mainContent">
+        <div id="startScreen">
+            <h1 class="text-line" id="greeting"></h1>
+            <div class="button-container">
+                <button class="button" id="startButton">Загляни в моё сердце...</button>
+            </div>
+        </div>
+        <div id="storyScreen" class="hidden"></div>
+    </div>
+    
+    <div id="finalScene" class="hidden">
+        <div class="star" id="star1"></div>
+        <div class="star" id="star2"></div>
+        <h2 id="finalText">Начало нашей вечности...</h2>
+    </div>
+
+    <audio id="background-music" loop>
+        <source src="love.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.9.3/tsparticles.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJ8J5Iiht5ZIrK1zUNIwvCDrNyaxOKdyo",
+            authDomain: "love-f945f.firebaseapp.com",
+            projectId: "love-f945f",
+            storageBucket: "love-f945f.appspot.com",
+            messagingSenderId: "1057848600983",
+            appId: "1:1057848600983:web:0b79c34d2af97b6faabcd2",
+            measurementId: "G-Y53NGXRMQW"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        const name = new URLSearchParams(window.location.search).get('name') || 'Гость';
+        const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const startTime = new Date();
+
+        function logEvent(eventName, details = {}) {
+            const eventData = { event: eventName, timestamp: new Date().toISOString(), ...details };
+            database.ref(`sessions/${sessionId}/events`).push(eventData);
+        }
+
+        function updateSessionSummary(data) {
+            database.ref(`sessions/${sessionId}`).update(data);
+        }
+
+        updateSessionSummary({ name: name, startTime: startTime.toISOString(), userAgent: navigator.userAgent });
+        logEvent('session_start');
+        
+        window.addEventListener('beforeunload', () => {
+            const endTime = new Date();
+            const durationSeconds = Math.round((endTime - startTime) / 1000);
+            updateSessionSummary({ endTime: endTime.toISOString(), durationSeconds: durationSeconds });
+            logEvent('session_end');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const greeting = document.getElementById('greeting');
+            const startButton = document.getElementById('startButton');
+            const startScreen = document.getElementById('startScreen');
+            const storyScreen = document.getElementById('storyScreen');
+            const finalScene = document.getElementById('finalScene');
+            const mainContent = document.getElementById('mainContent');
+            const music = document.getElementById('background-music');
+            const volumeModal = document.getElementById('volume-modal');
+            const proceedButton = document.getElementById('proceedButton');
+
+            greeting.textContent = `Для тебя, ${name}...`;
+
+            volumeModal.classList.add('visible');
+            logEvent('sound_modal_shown');
+
+            proceedButton.addEventListener('click', () => {
+                logEvent('experience_started');
+                gsap.to(volumeModal, {duration: 1, opacity: 0, onComplete: () => {
+                    volumeModal.classList.add('hidden');
+                    startExperience();
+                }});
+            });
+            
+            function startExperience(){
+                gsap.to(greeting, { duration: 2, opacity: 1, y: 0 });
+                gsap.to(startButton.parentElement, { duration: 2, delay: 1, opacity: 1, scale: 1 });
+            }
+
+            tsParticles.load("particles-js", {fullScreen:{enable:false},particles:{number:{value:120},color:{value:["#ffffff","#ff69b4","#add8e6"]},opacity:{value:0.8,random:!0,anim:{enable:!0,speed:1,opacity_min:0.1}},size:{value:2,random:!0},move:{enable:!0,speed:0.5,random:!0}},interactivity:{events:{onhover:{enable:!0,mode:"bubble"},onclick:{enable:!0,mode:"push"}},modes:{bubble:{distance:100,size:4,duration:2,opacity:1}}}});
+            
+            startButton.addEventListener('click', async () => {
+                logEvent('story_begin');
+                music.volume = 0;
+                music.play().then(() => {
+                    gsap.to(music, {volume: 0.5, duration: 2}); // Плавное увеличение громкости
+                });
+                await gsap.to(startScreen, { duration: 1.5, opacity: 0 });
+                startScreen.classList.add('hidden');
+                storyScreen.classList.remove('hidden');
+                await startStory();
+            });
+            
+            const phrases = [ "Знаешь...", "Я долго пытался найти правильные слова.", "Но понял, что самые важные слова - самые простые.", "Они идут от самого сердца." ];
+            const finalQuestion = "Я люблю тебя. А ты меня?";
+
+            async function startStory() {
+                for (const phrase of phrases) { await animateText(phrase); }
+                const questionElement = document.createElement('h2');
+                questionElement.className = 'text-line';
+                questionElement.textContent = finalQuestion;
+                storyScreen.appendChild(questionElement);
+                await gsap.to(questionElement, { duration: 2, opacity: 1, y: 0 });
+                const buttons = document.createElement('div');
+                buttons.className = 'button-container';
+                buttons.innerHTML = `<button class="button" id="yesButton">Да ❤️</button><button class="button" id="noButton">Нет 💔</button>`;
+                storyScreen.appendChild(buttons);
+                gsap.to(buttons, { duration: 2, opacity: 1, scale: 1, onComplete: () => {
+                    logEvent('final_choice_shown');
+                }});
+                document.getElementById('yesButton').addEventListener('click', handleYesClick);
+                document.getElementById('noButton').addEventListener('mouseover', moveNoButton);
+            }
+
+            function animateText(text) {
+                return new Promise(resolve => {
+                    const line = document.createElement('h2');
+                    line.className = 'text-line';
+                    line.textContent = text;
+                    storyScreen.appendChild(line);
+                    gsap.to(line, { duration: 2.5, opacity: 1, y: 0, delay: 0.5, onComplete: () => setTimeout(resolve, 1000) });
+                });
+            }
+
+            function handleYesClick() {
+                logEvent('response_yes');
+                updateSessionSummary({ finalResponse: 'Да ❤️' });
+                const tl = gsap.timeline();
+                tl.to(mainContent, { duration: 2, opacity: 0, ease: 'power2.in' });
+                tl.call(() => {
+                    mainContent.classList.add('hidden');
+                    finalScene.classList.remove('hidden');
+                });
+                tl.to(".star", { duration: 2, opacity: 1, scale: 1.2, ease: 'power2.out' });
+                tl.to("#star1", { duration: 4, top: '50%', left: '50%', ease: 'power2.inOut' }, '+=0.5');
+                tl.to("#star2", { duration: 4, top: '50%', left: '50%', ease: 'power2.inOut' }, '<');
+                tl.to(".star", { duration: 1.5, scale: 5, opacity: 0, ease: 'expo.out' });
+                tl.to("#finalText", { duration: 3, opacity: 1, scale: 1.2, ease: 'elastic.out(1, 0.5)' }, "-=1.0");
+            }
+            
+            function moveNoButton(event) {
+                logEvent('no_button_hover');
+                const button = event.target;
+                const newX = Math.random() * 200 - 100;
+                const newY = Math.random() * 100 - 50;
+                gsap.to(button, { duration: 0.3, x: newX, y: newY, ease: 'power2.out' });
+            }
+        });
+    </script>
+</body>
+</html>
