@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>❤️ Админ-панель</title>
+    <style>
+        :root {
+            --bg-main: #1a1a2e;
+            --bg-card: #2a2a4e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0d0;
+            --accent-pink: #ff69b4;
+            --accent-red: #ff5252;
+            --accent-green: #00c853;
+            --accent-blue: #2979ff;
+        }
+        body {
+            margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-main); color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* --- 1. СТИЛИ ДЛЯ ВХОДА --- */
+        #login-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .login-box {
+            background: var(--bg-card); padding: 40px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;
+            width: 90%; max-width: 350px;
+        }
+        .login-box h2 { margin-top: 0; color: var(--accent-pink); }
+        .login-box input {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #444;
+            background: #111; color: var(--text-primary); border-radius: 8px; box-sizing: border-box;
+        }
+        .login-box button {
+            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            background: var(--accent-pink); color: white; font-weight: bold;
+            cursor: pointer; transition: background 0.3s;
+        }
+        .login-box button:hover { background: #ff85c1; }
+        #login-error { color: var(--accent-red); margin-top: 15px; font-size: 0.9em; }
+
+        /* --- 2. СТИЛИ АДМИН-ПАНЕЛИ --- */
+        #admin-container { display: none; /* Скрыто до входа */ }
+        
+        header {
+            background: var(--bg-card); padding: 20px;
+            border-bottom: 2px solid var(--accent-pink);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .header-content {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: 1200px; margin: 0 auto; flex-wrap: wrap; gap: 20px;
+        }
+        .header-content h1 { margin: 0; color: var(--accent-pink); }
+        #logout-button {
+            padding: 8px 15px; background: var(--accent-red); color: white;
+            border: none; border-radius: 8px; cursor: pointer;
+        }
+        
+        /* Генератор ссылок */
+        .generator {
+            background: var(--bg-main); padding: 15px; border-radius: 8px;
+            display: flex; gap: 10px; margin: 20px auto; max-width: 1200px;
+        }
+        .generator input { flex-grow: 1; padding: 10px; border: 1px solid #444; background: #333; color: white; border-radius: 5px; }
+        .generator button { padding: 10px 15px; background: var(--accent-blue); color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #generatedLink {
+            background: #111; padding: 10px; border-radius: 5px; margin-top: 10px;
+            font-family: monospace; word-wrap: break-word; color: #ccc;
+        }
+
+        /* Сетка для карточек */
+        #sessions-grid {
+            padding: 20px; max-width: 1200px; margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .loading { text-align: center; padding: 50px; font-size: 1.2em; }
+
+        /* --- 3. СТИЛИ КАРТОЧЕК --- */
+        .session-card {
+            background: var(--bg-card); border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            overflow: hidden; display: flex; flex-direction: column;
+            border-top: 4px solid var(--accent-pink);
+        }
+        .card-header {
+            padding: 15px 20px; border-bottom: 1px solid #444;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .card-header h3 { margin: 0; font-size: 1.5em; }
+        .card-response {
+            font-size: 1.2em; font-weight: bold;
+        }
+        .response-yes { color: var(--accent-green); }
+        .response-pending { color: var(--text-secondary); }
+
+        .card-body { padding: 20px; flex-grow: 1; }
+        .card-info { margin-bottom: 15px; }
+        .card-info p {
+            margin: 5px 0; color: var(--text-secondary);
+            font-size: 0.95em;
+        }
+        .card-info p strong { color: var(--text-primary); min-width: 100px; display: inline-block; }
+
+        .card-buttons {
+            display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;
+        }
+        .card-button {
+            padding: 8px 15px; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: bold; text-decoration: none;
+            color: white; font-size: 0.9em;
+        }
+        .map-button { background: var(--accent-blue); }
+        .map-button:hover { background: #4d94ff; }
+        .events-button { background: #555; }
+        .events-button:hover { background: #777; }
+        .delete-button { background: var(--accent-red); }
+        .delete-button:hover { background: #ff6e6e; }
+
+        .card-footer {
+            background: #1e1e3b; padding: 15px;
+            display: none; /* Скрыто по умолчанию */
+        }
+        .card-footer h4 { margin-top: 0; color: var(--accent-pink); }
+        .event-item {
+            font-size: 0.85em; background: #2a2a4e; padding: 5px 10px;
+            border-radius: 4px; margin-bottom: 5px; color: var(--text-secondary);
+        }
+        .event-item strong { color: #ffa500; }
+    </style>
+</head>
+<body>
+
+    <div id="login-modal">
+        <div class="login-box">
+            <h2>❤️ Вход для админа</h2>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Пароль">
+            <button id="login-button">Войти</button>
+            <p id="login-error" class="hidden"></p>
+        </div>
+    </div>
+
+    <div id="admin-container">
+        
+        <header>
+            <div class="header-content">
+                <h1>Панель Управления</h1>
+                <button id="logout-button">Выйти</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="generator">
+                <input type="text" id="nameInput" placeholder="Напиши имя...">
+                <button id="generateButton">Создать ссылку</button>
+            </div>
+            <div id="generatedLink" style="max-width: 1170px; margin: 0 auto 20px auto; padding: 10px;">...</div>
+
+            <div id="sessions-grid">
+                <p class="loading">Загрузка сессий...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <script>
+     const firebaseConfig = {
+  apiKey: "AIzaSyBJ8J5Iiht5ZIrK1zUNIwvCDrNyaxOKdyo",
+  authDomain: "love-f945f.firebaseapp.com",
+  databaseURL: "https://love-f945f-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "love-f945f",
+  storageBucket: "love-f945f.firebasestorage.app",
+  messagingSenderId: "1057848600983",
+  appId: "1:1057848600983:web:0b79c34d2af97b6faabcd2",
+  measurementId: "G-Y53NGXRMQW"
+};
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // 2. ПОЛУЧЕНИЕ ЭЛЕМЕНТОВ
+        const loginModal = document.getElementById('login-modal');
+        const adminContainer = document.getElementById('admin-container');
+        const loginButton = document.getElementById('login-button');
+        const logoutButton = document.getElementById('logout-button');
+        const loginEmail = document.getElementById('login-email');
+        const loginPassword = document.getElementById('login-password');
+        const loginError = document.getElementById('login-error');
+        const sessionsGrid = document.getElementById('sessions-grid');
+
+        // 3. ЛОГИКА ВХОДА И ВЫХОДА
+        loginButton.addEventListener('click', () => {
+            const email = loginEmail.value;
+            const password = loginPassword.value;
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    loginError.textContent = "Неверный email или пароль.";
+                    loginError.classList.remove('hidden');
+                    console.error("Ошибка входа:", error.message);
+                });
+        });
+
+        logoutButton.addEventListener('click', () => {
+            auth.signOut();
+        });
+
+        // 4. СЛУШАТЕЛЬ СОСТОЯНИЯ АУТЕНТИФИКАЦИИ
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Пользователь вошел
+                loginModal.style.display = 'none';
+                adminContainer.style.display = 'block';
+                loadAllSessions(); // Загружаем сессии
+            } else {
+                // Пользователь не вошел
+                loginModal.style.display = 'flex';
+                adminContainer.style.display = 'none';
+            }
+        });
+
+        // 5. ЛОГИКА ГЕНЕРАТОРА ССЫЛОК
+        const nameInput = document.getElementById('nameInput');
+        const generateButton = document.getElementById('generateButton');
+        const generatedLink = document.getElementById('generatedLink');
+
+        generateButton.addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert('Пожалуйста, введите имя.');
+                return;
+            }
+            const link = `${window.location.origin}${window.location.pathname.replace('admin.html', 'index.html')}?name=${encodeURIComponent(name)}`;
+            generatedLink.textContent = link;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Ссылка скопирована!');
+            });
+        });
+
+        // 6. ЗАГРУЗКА И ОТОБРАЖЕНИЕ СЕССИЙ
+        function loadAllSessions() {
+            const sessionsRef = database.ref('sessions/').orderByChild('startTime');
+            
+            sessionsRef.on('value', (snapshot) => {
+                sessionsGrid.innerHTML = ''; // Очищаем
+                const sessions = snapshot.val();
+                
+                if (!sessions) {
+                    sessionsGrid.innerHTML = '<p class="loading">Пока нет ни одной сессии.</p>';
+                    return;
+                }
+
+                // Сортируем (новые вверху)
+                const sortedIds = Object.keys(sessions).sort((a, b) => {
+                    return new Date(sessions[b].startTime) - new Date(sessions[a].startTime);
+                });
+
+                // Создаем карточку для каждой сессии
+                sortedIds.forEach(sessionId => {
+                    const session = sessions[sessionId];
+                    const card = createSessionCard(sessionId, session);
+                    sessionsGrid.appendChild(card);
+                });
+            });
+        }
+
+        function createSessionCard(sessionId, session) {
+            const card = document.createElement('div');
+            card.className = 'session-card';
+
+            const responseClass = session.finalResponse === 'Да ❤️' ? 'response-yes' : 'response-pending';
+            const responseText = session.finalResponse || 'Ждём...';
+
+            const startTime = new Date(session.startTime).toLocaleString();
+            const duration = session.durationSeconds ? `${session.durationSeconds} сек.` : 'Активна';
+
+            // Кнопка "Открыть карту" (появится, только если есть локация)
+            let mapButton = '';
+            if (session.location && session.location.lat) {
+                mapButton = `
+                    <a href="https://www.google.com/maps?q=${session.location.lat},${session.location.lng}" 
+                       target="_blank" class="card-button map-button">
+                       Открыть карту
+                    </a>`;
+            }
+
+            // Рендер событий
+            let eventsHtml = '<h4>Событий нет</h4>';
+            if (session.events) {
+                eventsHtml = Object.values(session.events)
+                    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+                    .map(event => `
+                        <div class="event-item">
+                            <strong>${event.event}</strong> - ${new Date(event.timestamp).toLocaleTimeString()}
+                        </div>
+                    `).join('');
+            }
+
+            // Собираем карточку
+            card.innerHTML = `
+                <div class="card-header">
+                    <h3>${session.name || 'Гость'}</h3>
+                    <span class="card-response ${responseClass}">${responseText}</span>
+                </div>
+                <div class="card-body">
+                    <div class="card-info">
+                        <p><strong>Начало:</strong> ${startTime}</p>
+                        <p><strong>Длительность:</strong> ${duration}</p>
+                        <p><strong>Устройство:</strong> ${session.userAgent || 'Неизвестно'}</p>
+                    </div>
+                    <div class="card-buttons">
+                        ${mapButton}
+                        <button class="card-button events-button" data-events-id="${sessionId}">
+                            Показать события
+                        </button>
+                        <button class="card-button delete-button" data-session-id="${sessionId}">
+                            Удалить
+                        </button>
+                    </div>
+                </div>
+                <div class="card-footer" id="events-${sessionId}">
+                    <h4>Хронология событий:</h4>
+                    ${eventsHtml}
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // 7. ОБРАБОТКА КЛИКОВ НА КНОПКИ (УДАЛИТЬ / ПОКАЗАТЬ СОБЫТИЯ)
+        sessionsGrid.addEventListener('click', (e) => {
+            const target = e.target;
+
+            // Кнопка "Удалить"
+            if (target.classList.contains('delete-button')) {
+                const sessionId = target.dataset.sessionId;
+                if (confirm(`Вы уверены, что хотите удалить сессию для "${sessionId}"?`)) {
+                    database.ref(`sessions/${sessionId}`).remove()
+                        .then(() => console.log('Сессия удалена!'))
+                        .catch((err) => console.error('Ошибка удаления:', err));
+                }
+            }
+
+            // Кнопка "Показать события"
+            if (target.classList.contains('events-button')) {
+                const eventsId = target.dataset.eventsId;
+                const footer = document.getElementById(`events-${eventsId}`);
+                if (footer) {
+                    const isHidden = footer.style.display === 'none' || footer.style.display === '';
+                    footer.style.display = isHidden ? 'block' : 'none';
+                    target.textContent = isHidden ? 'Скрыть события' : 'Показать события';
+                }
+            }
+        });
+  <script>
+        // Block right-click context menu
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Block specific keyboard shortcuts
+        document.addEventListener('keydown', event => {
+            // Block F12
+            if (event.key === 'F12') {
+                event.preventDefault();
+            }
+            // Block Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+            if (event.ctrlKey && event.shiftKey && ['I', 'J', 'C'].includes(event.key.toUpperCase())) {
+                event.preventDefault();
+            }
+            // Block Ctrl+U (View Source)
+            if (event.ctrlKey && event.key.toUpperCase() === 'U') {
+                event.preventDefault();
+            }
+            // Block Ctrl+C (Copy)
+            if (event.ctrlKey && event.key.toUpperCase() === 'C') {
+                event.preventDefault();
+            }
+        });
+    </script>
+    </script>
+</body>
+</html>
