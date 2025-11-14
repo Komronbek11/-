@@ -242,7 +242,7 @@
                 alert('Пожалуйста, введите имя.');
                 return;
             }
-            const link = `${window.location.origin}${window.location.pathname.replace('admin.html', 'index.html')}?name=${encodeURIComponent(name)}`;
+            const link = `${window.location.origin}${window.location.pathname.replace('index.html', 'index.html')}?name=${encodeURIComponent(name)}`;
             generatedLink.textContent = link;
             navigator.clipboard.writeText(link).then(() => {
                 alert('Ссылка скопирована!');
